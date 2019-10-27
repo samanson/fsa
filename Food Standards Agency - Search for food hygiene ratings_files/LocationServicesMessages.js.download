@@ -1,0 +1,20 @@
+﻿var locationFoundMessage = "Search for local establishments close to your current location";
+var locationServiceErrorMessage = "Local position error - browser does not support location services";
+
+var locationServiceErrorCodeMessages = ["Unknown error attempting to initiate location services",
+    "Browser preferences set to prohibit location services",
+    "Location services was unable to determine your current location",
+    "Location services timeout - unable to determine your current location"];
+
+$(document).ready(function () {
+    if ($("input[id$='hdnLocationSearchSelected']").val() == "true") {
+        $('.locationCheckbox').each(function (i, checkbox) {
+            ShowLocationSearch();
+            checkbox.checked = true;
+        });
+    }
+
+    $('.locationCheckbox').on('click', function () {
+        ToggleDistanceSearch();
+    });
+});

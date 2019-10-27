@@ -1,0 +1,186 @@
+﻿
+        var locationServicesEnabled = false;
+        var coords;
+
+        function GetLocation() {
+            try {
+                navigator.geolocation.getCurrentPosition(LocationSuccess, positionError, { timeout: 10000 });
+            } 
+            catch(e) {
+                $('.locationRadarIcon').addClass("locationServiceError");
+                $('.locationRadarStatus').prop('title', locationServiceErrorMessage);
+                $('.searchOrderSelector option[value="Distance"]').prop('disabled', true);
+                if ($('.fhrsLocalAuthoritySearch').length == 0) {
+                    $('.cannotUseLocation').removeClass("dontShow");
+                }
+                HideLocationSearch();
+            }
+        }
+
+        function LocationSuccess(position) {
+            var selectedSort = $('.searchOrderSelector').val();
+            locationServicesEnabled  = true;
+            coords = position.coords;
+            $("input[id$='hdnLatitude']").val(coords.latitude);
+            $("input[id$='hdnLongitude']").val(coords.longitude);
+            $("input[id$='hdnLocationServicesEnabled']").val("true");
+            $('.locationSwitch').removeClass("dontShow");
+            if ($("input[id$='hdnLocationSearchSelected']").val() == "") 
+            {
+                $("input[id$='hdnLocationSearchSelected']").val("false");
+            }
+            if ($("input[id$='hdnLocationSearchSelected']").val() == "true") {
+                ShowLocationSearch();
+                $('.searchOrderSelector option[value="Distance"]').prop('disabled', false);
+            } else {
+                HideLocationSearch();
+                $('.searchOrderSelector option[value="Distance"]').prop('disabled', true);
+            }
+                    
+            $('.locationRadarIcon').addClass("locationFound");
+            $('.locationRadarStatus').prop('title', locationFoundMessage);
+            $('.searchOrderSelector').val(selectedSort);
+            navigator.geolocation.watchPosition(WatchPositionSuccess);
+        }
+
+        function WatchPositionSuccess(position) {
+            coords = position.coords;
+            $("input[id$='hdnLatitude']").val(coords.latitude);
+            $("input[id$='hdnLongitude']").val(coords.longitude);
+        }
+
+        function ToggleDistanceSearch() {
+            if (!locationServicesEnabled) {
+                return;
+            }
+
+            if ($("input[id$='hdnLocationSearchSelected']").val() == "true") {
+                $("input[id$='hdnLocationSearchSelected']").val("false");
+                HideLocationSearch();
+                if ($('.searchOrderSelector option[value="Distance"]').prop('selected')) {
+                    $('.searchOrderSelector option[value="Distance"]').prop('selected', '');
+                    $('.searchOrderSelector option[value="Relevance"]').prop('selected', 'selected');
+                }
+                $('.searchOrderSelector option[value="Distance"]').prop('disabled', true);
+            } else {
+                $("input[id$='hdnLocationSearchSelected']").val("true");
+                ShowLocationSearch();
+                $('.searchOrderSelector option[value="Distance"]').prop('disabled', false);
+                $('.searchOrderSelector option[value="Distance"]').prop('selected', 'selected');
+            }
+        }
+
+        function ShowLocationSearch() {
+            $("div[id$='searchAddressContainer']").hide();
+            $("input[id$='uxSearchAddress']").val("");
+            $("div[id$='localAuthoritySelection']").hide();
+            $("input[id$='uxSearchLocalAuthority']").val("");
+
+            $("div[id$='togglefhrsAdvancedOptions']").addClass('is-open');
+            $("div[id$='collapsibleFhrsAdvancedOptions']").addClass('is-open');
+            $("div[id$='togglefhrsAdvancedOptions']").hide();
+
+            
+            $("[id$='_fhrsAdvancedOptions']").removeClass('hideWithJS');
+            $('.fhrsAdvancedOptions').slideDown(1);
+            $("[id$='FHRSFilter']").slideDown();
+            $("[id$='FHISFilter']").slideDown();
+            $("#SearchResultsExpandedSpacer").show();
+        }
+
+        function HideLocationSearch() {
+            $("div[id$='searchAddressContainer']").show();
+            
+            if ($("[id$='uxSearchLocalAuthority']").length) {
+
+                $("div[id$='localAuthoritySelection']").show();
+
+                var Scheme = $("[id$='uxSearchLocalAuthority']").val().split('-');
+                switch (Scheme[1]) {
+                    case '1':
+                        $("[id$='FHRSFilter']").slideDown();
+                        $("[id$='FHISFilter']").slideUp();
+                        $("#SearchResultsExpandedSpacer").hide();
+                        break;
+                    case '2':
+                        $("[id$='FHISFilter']").slideDown();
+                        $("[id$='FHRSFilter']").slideUp();
+                        $("#SearchResultsExpandedSpacer").hide();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            $("div[id$='togglefhrsAdvancedOptions']").show();
+        }
+
+        function positionError(e) {
+            $('.locationRadarStatus').prop('title', locationServiceErrorCodeMessages[e.code]);
+            $('.locationRadarIcon').addClass("locationServiceError");
+            $('.searchOrderSelector option[value="Distance"]').prop('disabled', true);
+            if ($('.fhrsLocalAuthoritySearch').length == 0) {
+                $('.cannotUseLocation').removeClass("dontShow");
+            }
+            HideLocationSearch();
+        }
+
+        function Search() {
+            $('#loadingResultsWrapper').toggle();
+            var searchName = $("#nameTextBox").val();
+            var searchAddress = $("#addressTextBox").val();
+            var searchBusinessType = $("#SelectedBusinessType").val();
+            var searchLocalAuthority = $("#SelectedAuthority").val();
+            var searchRating = $("#SelectedRating").val();
+            var distance;
+            var latitude;
+            var longitude;
+
+            if (locationServicesEnabled) {
+                distance = $("#SelectedDistance").val();
+                latitude = coords.latitude;
+                longitude = coords.longitude;
+            }
+
+            $.ajax({
+                type: 'GET',
+                dataType: 'html',
+                url: 'search/SearchResultsPaged',
+                data: {
+                    name: searchName,
+                    address: searchAddress,
+                    localAuthority: searchLocalAuthority,
+                    businessType: searchBusinessType,
+                    rating: searchRating,
+                    distance: distance,
+                    latitude: latitude,
+                    longitude: longitude,
+                    skip: 0,
+                    take: 10
+                },
+                cache: true
+            }).done(function (results) {
+                $('#loadingResultsWrapper').toggle();
+                $('#searchResults').html(results);
+            }
+            );
+        }
+
+        function RefreshIndex() {
+            var fullIndex = $('#fullIndexCheckBox').is(':checked');
+            $('#indexSummary').html("");
+            $('#loadingWrapper').toggle();
+            $.ajax({
+                type: 'GET',
+                dataType: 'text',
+                data: { isFullRebuild: fullIndex },
+                url: 'http://localhost/fsaApiTemplate/api/index',
+                cache: true
+            }).done(function (data) {
+                $('#indexSummary').html(data);
+                $('#loadingWrapper').toggle();
+            }).fail(function (jqXhr, textStatus, errorThrown) {
+                $('#indexSummary').html('Error when indexing: ' + textStatus);
+                $('#loadingWrapper').toggle();
+            });            
+        }

@@ -1,0 +1,8 @@
+﻿$(document).ready(function () {
+    $("#widgetDetails").hide();
+    
+    $("#getCodeLink").click(function () {
+        $("#widgetDetails").show();
+        return false;
+    });
+})

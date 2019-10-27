@@ -1,0 +1,109 @@
+﻿$(document).ready(function () {
+
+    $('.dynaText:first').focus();
+
+    $("input[type='text']").keypress(function (event) {
+        if (event.which == 13) {
+            event.preventDefault();
+            $("[id$='_uxSearchBox_uxSearchAction']").click();
+        }
+    });
+
+    $("input[type='radio']").keypress(function (event) {
+        if (event.which == 13) {
+            event.preventDefault();
+            $("[id$='_uxSearchBox_uxSearchAction']").click();
+        }
+    });
+
+    // toggle on buttons to off 
+    $("input[type='radio']").click(function () {
+        var previousValue = $(this).attr('previousValue');
+        var name = $(this).attr('name');
+
+        if (previousValue == 'checked') {
+            $(this).removeAttr('checked');
+            $(this).attr('previousValue', false);
+        }
+        else {
+            $("input[name='" + name + "']:radio").attr('previousValue', false);
+            $(this).attr('previousValue', 'checked');
+        }
+    });
+
+
+    // Bind selection dropdowns to associated option buttons   
+    $("#uxSearchOperator").click(function () {
+        $("#rbFHRS").prop('checked', true);
+    });
+
+    $("#uxSearchScore").click(function () {
+        $("#rbFHRS").prop('checked', true);
+    });
+
+    $("#uxSearchStatus").click(function () {
+        $("[id$='_rbFHIS']").prop('checked', true);
+    });
+
+
+    $("[id$='uxSearchLocalAuthority']").change(function () {
+        ShowHideFilters();
+    });
+
+
+    function ShowHideFilters() {
+        var Scheme = $("[id$='uxSearchLocalAuthority']").val().split('-');
+        switch (Scheme[1]) {
+            case '1':
+                $("[id$='FHRSFilter']").slideDown();
+                $("[id$='FHISFilter']").slideUp();
+                $("#SearchResultsExpandedSpacer").hide();
+                return false;
+                break;
+            case '2':
+                $("[id$='FHISFilter']").slideDown();
+                $("[id$='FHISFilter']").addClass("no-padding-left");
+                $("[id$='FHRSFilter']").slideUp();
+                $("#SearchResultsExpandedSpacer").hide();
+                return false;
+                break;
+            default:
+                $("[id$='FHRSFilter']").slideDown();
+                $("[id$='FHISFilter']").slideDown();
+                $("[id$='FHISFilter']").removeClass("no-padding-left");
+                $("#SearchResultsExpandedSpacer").show();
+                return false;
+        }
+    };
+
+    var FindMyAreaActive = ($("[id$='_localAuthoritySelection']").length == 0);
+    var ShowExpanded = ($("[id$='_fhrsAdvancedOptions']").hasClass("ShowExpanded"));
+
+    if ($(window).width() <= "568") {
+        ShowExpanded = false;
+    }
+
+    //If no advanced options selected hide options
+    var ShowAdvancedOptions = !((($("[id$='uxSearchLocalAuthority']").val() == "^-0") || (FindMyAreaActive))
+        && ($("[id$='_uxSearchBusinessType']").val() == 0)
+        ) || ShowExpanded;
+
+    ShowHideAdvancedOptions(ShowAdvancedOptions);
+
+    function ShowHideAdvancedOptions(ShowAdvancedOptions) {
+        if (ShowAdvancedOptions) {
+            $("#SearchResultsExpandedSpacer").show();
+            if ($("[id$='uxSearchLocalAuthority']").val() != null) {
+                ShowHideFilters();
+            }
+            return false;
+        } else {
+            $("#SearchResultsExpandedSpacer").hide();
+            if ($("[id$='uxSearchLocalAuthority']").val() != null) {
+                ShowHideFilters();
+            }
+            return false;
+        }
+    }
+});
+

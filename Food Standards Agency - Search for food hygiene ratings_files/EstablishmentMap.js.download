@@ -1,0 +1,39 @@
+﻿var map = null;
+var MM = Microsoft.Maps;
+var estMapName = "establishmentMap";
+var estMapDiv = null;
+var sessionKey;
+
+
+function LoadEstablishmentMap() {
+    var apiKey = fhrsSettings.apiKey;
+    if (apiKey != null && apiKey != '') // Don't continue if no api key
+    {
+        estMapDiv = document.getElementsByName(estMapName)[0];
+
+        if (estMapDiv != null) { // Don't continue if no map target
+            var name = estMapDiv.getAttribute("data-est")
+            var longitude = parseFloat(estMapDiv.getAttribute("data-long"));
+            var latitude = parseFloat(estMapDiv.getAttribute("data-lat"));
+            var location = new MM.Location(latitude, longitude);
+
+            map = new MM.Map(estMapDiv, {
+                credentials: apiKey,
+                center: location,
+                mapTypeId: "r",
+                zoom: 13,
+                showMapTypeSelector: false,
+                showLocateMeButton: false,
+                disableZooming: false,
+                disablePanning: false,
+                disableKeyboardInput: true
+            });
+            if (map != null) {
+                var pin = new MM.Pushpin(location, { title: name });
+                map.entities.push(pin);
+            }
+        }
+    }
+}
+
+window.onload = LoadEstablishmentMap;

@@ -1,0 +1,70 @@
+﻿$(document).ready(function () {
+    // Adjust columns if distance is shown
+    if ($('.uxResults').hasClass('wshowDistance')) {
+        var a = $('.socialWrapperMobile').html;
+    }
+
+    if ($(window).width() < 569) {
+        $(".ResultsBusinessAddress").each(function () {
+            var addressText = $(this).text().trim();
+            $(this).html(HyphenateLongWordsForMobile(addressText));
+        });
+    }
+});
+
+function HyphenateLongWordsForMobile(textString) {
+    var result = "";
+    var maxWordLength = 10;
+
+    var words = textString.split(' ');
+    var wordIndex = 0;
+    for (i = 0; i < words.length; i++) {
+        if (words[i].length > maxWordLength) {
+            if (words[i].indexOf("\n") != -1) {
+                var lineEndedWords = words[i].split("\n");
+                for (j = 0; j < lineEndedWords.length; j++) {
+                    if (lineEndedWords[j].length > maxWordLength) {
+                        result += HyphenatedWord(lineEndedWords[j], maxWordLength);
+                    }
+                    else {
+                        result += lineEndedWords[j];
+                    }
+                    result += "\n";
+                }
+            }
+            else {
+                result += HyphenatedWord(words[i], maxWordLength);
+            }
+        }
+        else {
+            result += words[i];
+        }
+        result += " ";
+    }
+
+    return result;
+
+}
+
+function HyphenatedWord(word, maxWordLength) {
+    var result = "";
+    var wordChunks = SplitWord(word, maxWordLength);
+    var chunkCount = 1;
+    var totalChunks = wordChunks.length;
+    for (k = 0; k < wordChunks.length; k++) {
+        result += wordChunks[k];
+        if (chunkCount < totalChunks)
+            result += "-<br />";
+        chunkCount++;
+    }
+    return result.replace("--", "-");
+}
+
+function SplitWord(str, chunkSize) {
+    var wordChunks = [];
+    for (l = 0; l < str.length; l += chunkSize) {
+        wordChunks.push(str.substr(l, Math.min(chunkSize, str.length - l)));
+    }
+
+    return wordChunks;
+}
